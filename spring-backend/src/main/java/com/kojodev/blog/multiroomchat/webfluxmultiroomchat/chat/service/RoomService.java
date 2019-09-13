@@ -75,6 +75,16 @@ public class RoomService {
         return userRooms;
     }
 
+    public boolean isUserInRoom(String roomKey, String username) {
+        System.out.println("sprawdzam usera w pokoju " + roomKey + " username " + username);
+        final boolean result = !getRoomList()
+                .find(room -> room.key.equals(roomKey))
+                .filter(room -> room.users.contains(new User(username)))
+                .isEmpty();
+        System.out.println(result);
+        return result;
+    }
+
     private Room defaultRoom() {
         return new Room("Main room");
     }

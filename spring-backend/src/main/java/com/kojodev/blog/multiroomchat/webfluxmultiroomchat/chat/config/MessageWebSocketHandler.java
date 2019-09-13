@@ -32,9 +32,14 @@ public class MessageWebSocketHandler implements WebSocketHandler {
                         .map(message -> messagePublisher.push(message)))
                 .subscribe();
 
-        return webSocketSession.send(publisher
-                .map(message -> WebSocketMessageResolver.message(message))
-                .map(messageJson -> webSocketSession.textMessage(messageJson)));
+        return webSocketSession.send(
+                WebSocketMessageResolver.filter(publisher, webSocketSession)
+                        .map(message -> WebSocketMessageResolver.message(message))
+                        .map(messageJson -> webSocketSession.textMessage(messageJson)));
+
+//        return webSocketSession.send(publisher
+//                .map(message -> WebSocketMessageResolver.message(message))
+//                .map(messageJson -> webSocketSession.textMessage(messageJson)));
 
 
 //        return webSocketSession.send(

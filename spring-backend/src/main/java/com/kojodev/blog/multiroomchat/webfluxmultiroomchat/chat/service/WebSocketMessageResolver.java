@@ -1,5 +1,6 @@
 package com.kojodev.blog.multiroomchat.webfluxmultiroomchat.chat.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.app.AppError;
@@ -16,6 +17,7 @@ import io.vavr.jackson.datatype.VavrModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.socket.WebSocketSession;
+import reactor.core.publisher.Flux;
 
 import java.util.function.Function;
 
@@ -46,10 +48,49 @@ public class WebSocketMessageResolver {
     }
 
     public static String message(WebSocketChatMessage payload) {
-        log.info("przerabiamy message na stringa");
+//        log.info("przerabiamy message na stringa");
         return Try.of(() -> jsonMapper.writeValueAsString(payload))
                 .onFailure(exception -> log.error("Error parsing WebSocketChatMessage to JSON", exception))
                 .getOrElse("");
+//        return "";
+    }
+
+    public static Flux<WebSocketChatMessage> filter(Flux<WebSocketChatMessage> messages, WebSocketSession session) {
+//        TODO should not user json mapper here..
+        return Try.of(() -> {
+            final String username = Option.of(session
+                    .getAttributes()
+                    .get("username"))
+                    .map(userNameAttr -> userNameAttr.toString())
+                    .getOrElse(""); //TODO map username...
+
+
+            System.out.println("mamy username w filtrze: " + username);
+
+
+            final Flux<WebSocketChatMessage> filteredMessages = messages
+                    .filter(webSocketChatMessage -> webSocketChatMessage.type == WebSocketChatMessageType.MESSAGE)
+                    .map(webSocketChatMessage -> getRoomMessageOutDto(webSocketChatMessage))
+                    .filter(roomMessageOut -> roomService.isUserInRoom(roomMessageOut.roomKey, username))
+                    .map(roomMessageOutDto -> (JsonNode) jsonMapper.valueToTree(roomMessageOutDto))
+                    .map(payloadNode -> new WebSocketChatMessage(WebSocketChatMessageType.MESSAGE, payloadNode));
+
+            return messages
+                    .filter(webSocketChatMessage -> webSocketChatMessage.type != WebSocketChatMessageType.MESSAGE)
+                    .mergeWith(filteredMessages);
+        })
+                .onFailure(parseException -> log.error("Error parsing WebSocketChatMessage to JSON", parseException))
+                .getOrElse(Flux.empty());
+    }
+
+    private static RoomMessageOutDto getRoomMessageOutDto(WebSocketChatMessage webSocketChatMessage) {
+//        TODO why the fuck it's not handled by the vavr Try? in static filter method
+        try {
+            return jsonMapper.treeToValue(webSocketChatMessage.payload, RoomMessageOutDto.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Either<AppError, WebSocketChatMessage> process() {
