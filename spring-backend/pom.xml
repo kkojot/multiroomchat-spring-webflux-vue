@@ -30,6 +30,12 @@
 			<version>0.10.1</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.vavr</groupId>
+			<artifactId>vavr-jackson</artifactId>
+			<version>0.10.0</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.spockframework/spock-core -->
 		<dependency>
 			<groupId>org.spockframework</groupId>

@@ -1,7 +1,7 @@
 package com.kojodev.blog.multiroomchat.webfluxmultiroomchat.chat.config;
 
-import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.greetings.GreetingsPublisher;
-import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.greetings.GreetingsService;
+import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.app.websocket.WebSocketChatMessage;
+import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.chat.service.WebSocketMessageResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -11,23 +11,41 @@ import reactor.core.publisher.Mono;
 @Component
 public class MessageWebSocketHandler implements WebSocketHandler {
 
-    private final GreetingsService greetingsService = new GreetingsService();
-    private final GreetingsPublisher greetingsPublisher;
-    private final Flux<String> publisher;
+    private final MessagePublisher messagePublisher;
+    private final Flux<WebSocketChatMessage> publisher;
 
-    public MessageWebSocketHandler(GreetingsPublisher greetingsPublisher) {
-        this.greetingsPublisher = greetingsPublisher;
-        this.publisher = Flux.create(greetingsPublisher).share();
+    public MessageWebSocketHandler(MessagePublisher messagePublisher) {
+        this.messagePublisher = messagePublisher;
+        this.publisher = Flux.create(messagePublisher).share();
     }
 
     @Override
     public Mono<Void> handle(WebSocketSession webSocketSession) {
-        return webSocketSession.send(
-                webSocketSession
-                        .receive()
-                        .map(webSocketMessage -> webSocketMessage.getPayloadAsText())
-                        .map(message -> "hello, " + message)
-                        .map(message -> webSocketSession.textMessage(message))
-        );
+        webSocketSession
+                .receive()
+                .map(webSocketMessage -> webSocketMessage.getPayloadAsText())
+                .map(payload -> WebSocketMessageResolver.message(payload))
+                .map(webSocketMessage -> webSocketMessage
+                        .map(message -> new WebSocketMessageResolver(message, webSocketSession))
+                        .flatMap(webSocketMessageResolver -> webSocketMessageResolver.process()))
+                .map(response -> response
+                        .map(message -> messagePublisher.push(message)))
+                .subscribe();
+
+        return webSocketSession.send(publisher
+                .map(message -> WebSocketMessageResolver.message(message))
+                .map(messageJson -> webSocketSession.textMessage(messageJson)));
+
+
+//        return webSocketSession.send(
+//                webSocketSession
+//                        .receive()
+//                        .map(webSocketMessage -> webSocketMessage.getPayloadAsText())
+//                        .map(payload -> WebSocketMessageResolver.message(payload))
+//                        .map(webSocketMessage -> webSocketMessage
+//                                .map(message -> new WebSocketMessageResolver(message, webSocketSession))
+//                                .flatMap(webSocketMessageResolver -> webSocketMessageResolver.process())
+//                                .map(message -> webSocketSession.textMessage(message))
+//                        );
     }
 }

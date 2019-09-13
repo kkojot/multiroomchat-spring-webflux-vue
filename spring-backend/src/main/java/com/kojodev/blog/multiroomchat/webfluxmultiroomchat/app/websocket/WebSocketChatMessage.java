@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class WebSocketMessage {
+public class WebSocketChatMessage {
 
-    public final WebSocketMessageType type;
+    public final WebSocketChatMessageType type;
     public final JsonNode payload;
 
     @JsonCreator
-    public WebSocketMessage(@JsonProperty("type") WebSocketMessageType type,
-                            @JsonProperty("payload") JsonNode payload) {
+    public WebSocketChatMessage(@JsonProperty("type") WebSocketChatMessageType type,
+                                @JsonProperty("payload") JsonNode payload) {
         this.type = type;
         this.payload = payload;
     }
