@@ -1,0 +1,7 @@
+{
+  "type": "MESSAGE",
+  "payload": {
+    "roomKey": "main-room",
+    "message": "hello everyone in main room!"
+  }
+}
