@@ -1,7 +1,7 @@
 {
-  "type": "MESSAGE",
+  "type": "JOIN_CHAT",
   "payload": {
-    "roomKey": "main-room",
-    "message": "hello everyone in main room!"
+    "name": "kojot",
+    "team": "BLUE"
   }
 }

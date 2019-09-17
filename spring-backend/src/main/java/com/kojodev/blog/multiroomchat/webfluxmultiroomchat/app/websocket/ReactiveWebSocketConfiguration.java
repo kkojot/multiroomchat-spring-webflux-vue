@@ -2,6 +2,7 @@ package com.kojodev.blog.multiroomchat.webfluxmultiroomchat.app.websocket;
 
 import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.chat.config.MessageWebSocketHandler;
 import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.greetings.GreetingWebSocketHandler;
+import com.kojodev.blog.multiroomchat.webfluxmultiroomchat.team.TeamMessageWebSocketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.HandlerMapping;
@@ -18,11 +19,14 @@ public class ReactiveWebSocketConfiguration {
 
     private WebSocketHandler greetingWebSocketHandler;
     private WebSocketHandler messageWebSocketHandler;
+    private WebSocketHandler teamMessageWebSocketHandler;
 
     public ReactiveWebSocketConfiguration(GreetingWebSocketHandler greetingWebSocketHandler,
-                                          MessageWebSocketHandler messageWebSocketHandler) {
+                                          MessageWebSocketHandler messageWebSocketHandler,
+                                          TeamMessageWebSocketHandler teamMessageWebSocketHandler) {
         this.greetingWebSocketHandler = greetingWebSocketHandler;
         this.messageWebSocketHandler = messageWebSocketHandler;
+        this.teamMessageWebSocketHandler = teamMessageWebSocketHandler;
     }
 
     @Bean
@@ -30,6 +34,7 @@ public class ReactiveWebSocketConfiguration {
         Map<String, WebSocketHandler> map = new HashMap<>();
         map.put("/greetings", greetingWebSocketHandler);
         map.put("/chat", messageWebSocketHandler);
+        map.put("/team", teamMessageWebSocketHandler);
 
         SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
         handlerMapping.setOrder(1);
